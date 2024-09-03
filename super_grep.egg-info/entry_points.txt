@@ -1,0 +1,2 @@
+[console_scripts]
+super-grep = super_grep.main:main

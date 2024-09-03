@@ -1,0 +1,122 @@
+Metadata-Version: 2.1
+Name: super-grep
+Version: 0.1.2
+Summary: A powerful, format-agnostic search tool
+Home-page: https://github.com/msmolkin/super-grep
+Author: Michael Smolkin
+Author-email: michael@smolkin.org
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# Super Grep
+
+[![GitHub stars](https://img.shields.io/github/stars/msmolkin/super-grep.svg)](https://github.com/msmolkin/super-grep/stargazers)
+[![GitHub license](https://img.shields.io/github/license/msmolkin/super-grep.svg)](https://github.com/msmolkin/super-grep/blob/master/LICENSE)
+[![PyPI version](https://badge.fury.io/py/super-grep.svg)](https://badge.fury.io/py/super-grep)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YOUR_PAYPAL_BUTTON_ID)
+
+Super Grep is a powerful, format-agnostic search tool that allows you to search for patterns in files and directories with ease. It supports various naming conventions and provides options for controlling search depth, file content searching, and output colorization.
+
+## Features
+
+- Format-agnostic pattern matching (supports camelCase, snake_case, PascalCase, kebab-case, Title Case, Capitalized With Spaces, etc.)
+- Configurable search depth
+- File content searching
+- Colorized output
+- Multi-processing for improved performance
+
+## Installation
+
+You can install Super Grep using pip:
+
+```
+pip install super-grep
+```
+
+## Usage
+
+After installation, you can use the `super-grep` command directly from your terminal:
+
+```
+super-grep [OPTIONS] DIRECTORY PATTERN
+```
+
+### Options
+
+- `--workers NUMBER`: Number of worker processes (default: CPU count)
+- `--contents`: Search within file contents (default: search filenames only)
+- `--color`: Colorize the output
+- `--depth NUMBER`: Depth of directory search (default: 0, search only in given directory; use -1 for unlimited depth)
+
+### Examples
+
+1. Search only in the given directory:
+   ```
+   super-grep /path/to/search "FooBar|first_name"
+   ```
+
+2. Search up to 2 levels deep:
+   ```
+   super-grep /path/to/search "FooBar|first_name" --depth 2
+   ```
+
+3. Search all subdirectories:
+   ```
+   super-grep /path/to/search "FooBar|first_name" --depth -1
+   ```
+
+4. Search file contents up to 3 levels deep with colored output:
+   ```
+   super-grep /path/to/search "FooBar|first_name" --depth 3 --contents --color
+   ```
+
+5. Use 8 worker processes:
+   ```
+   super-grep /path/to/search "FooBar|first_name" --workers 8
+   ```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support the Project
+
+If you find Super Grep useful, please consider supporting its development. See the `SUPPORT.md` file included in this package for more information on how you can contribute.
+
+- PayPal: [Donate via PayPal](https://www.paypal.me/msmolkin)
+
+<!-- TODO for later: Update to use a donate badge instead. Format to use once I get the PayPal button from PayPal: [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate/?hosted_button_id=...)-->
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+# Supporting Super Grep
+
+If you find Super Grep useful and would like to support its development, there are several ways you can contribute:
+
+## Financial Support
+
+You can make a financial contribution to the project via:
+
+- PayPal: [Donate via PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YOUR_PAYPAL_BUTTON_ID)
+- GitHub Sponsors: [Sponsor on GitHub](https://github.com/sponsors/msmolkin)
+
+## Other Ways to Support
+
+- Star the project on GitHub
+- Report bugs or suggest features by opening issues on GitHub
+- Contribute code by submitting pull requests
+- Spread the word about Super Grep to your colleagues and friends
+
+Your support, in any form, is greatly appreciated and helps to ensure the continued development and maintenance of Super Grep. Thank you!

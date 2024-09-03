@@ -8,7 +8,7 @@ with open("SUPPORT.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="super-grep",
-    version="0.1.1",
+    version="0.1.2",
     author="Michael Smolkin",
     author_email="michael@smolkin.org",
     description="A powerful, format-agnostic search tool",
@@ -30,7 +30,7 @@ setup(
     python_requires=">=3.6",
     entry_points={
         "console_scripts": [
-            "super-grep=super_grep:main",
+            "super-grep=super_grep.main:main",
         ],
     },
     package_data={

@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+super_grep/__init__.py
+super_grep/main.py
+super_grep.egg-info/PKG-INFO
+super_grep.egg-info/SOURCES.txt
+super_grep.egg-info/dependency_links.txt
+super_grep.egg-info/entry_points.txt
+super_grep.egg-info/top_level.txt
