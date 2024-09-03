@@ -3,13 +3,16 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+with open("SUPPORT.md", "r", encoding="utf-8") as fh:
+    support_info = fh.read()
+
 setup(
     name="super-grep",
-    version="0.1.0",
+    version="0.1.1",
     author="Michael Smolkin",
     author_email="michael@smolkin.org",
     description="A powerful, format-agnostic search tool",
-    long_description=long_description,
+    long_description=long_description + "\n\n" + support_info,
     long_description_content_type="text/markdown",
     url="https://github.com/msmolkin/super-grep",
     packages=find_packages(),
@@ -29,5 +32,8 @@ setup(
         "console_scripts": [
             "super-grep=super_grep:main",
         ],
+    },
+    package_data={
+        "": ["SUPPORT.md"],
     },
 )

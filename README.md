@@ -69,6 +69,14 @@ super-grep [OPTIONS] DIRECTORY PATTERN
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Support the Project
+
+If you find Super Grep useful, please consider supporting its development. See the `SUPPORT.md` file included in this package for more information on how you can contribute.
+
+- PayPal: [Donate via PayPal](https://www.paypal.me/msmolkin)
+
+<!-- TODO for later: Update to use a donate badge instead. Format to use once I get the PayPal button from PayPal: [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate/?hosted_button_id=...)-->
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
