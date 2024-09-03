@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/msmolkin/super-grep.svg)](https://github.com/msmolkin/super-grep/stargazers)
 [![GitHub license](https://img.shields.io/github/license/msmolkin/super-grep.svg)](https://github.com/msmolkin/super-grep/blob/master/LICENSE)
 [![PyPI version](https://badge.fury.io/py/super-grep.svg)](https://badge.fury.io/py/super-grep)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YOUR_PAYPAL_BUTTON_ID)
+<!-- [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YOUR_PAYPAL_BUTTON_ID) -->
 
 Super Grep is a powerful, format-agnostic search tool that allows you to search for patterns in files and directories with ease. It supports various naming conventions and provides options for controlling search depth, file content searching, and output colorization.
 
