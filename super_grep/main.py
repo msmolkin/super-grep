@@ -8,12 +8,25 @@ import mmap
 import sys
 
 def transform_pattern(pattern):
-    parts = re.split(r'([A-Z][a-z]*|\d+)', pattern)
-    transformed = []
-    for part in parts:
-        if part:
-            transformed.append(re.escape(part.lower()))
-    return r'[-_]?'.join(transformed)
+    # Normalize the pattern by replacing all separator characters with a common placeholder, e.g., a space
+    normalized_pattern = re.sub(r'[-_\s]+', ' ', pattern)
+    
+    # Split the normalized pattern into words
+    words = normalized_pattern.split()
+    
+    # Transform each word to match any variation of camelCase, snake_case, etc.
+    transformed_words = []
+    for word in words:
+        parts = re.split(r'([A-Z][a-z]*|\d+)', word)
+        transformed_parts = [re.escape(part) for part in parts if part]
+        transformed_word = r'[-_\s]*'.join(transformed_parts)
+        transformed_words.append(transformed_word)
+    
+    # Join words with a regex that matches any sequence of separator characters
+    transformed_pattern = r'[-_\s]*'.join(transformed_words)
+    
+    # Add case insensitivity flag
+    return r'(?i)' + transformed_pattern
 
 def search_file(file_path, pattern, search_contents, colorize):
     results = []
@@ -29,6 +42,7 @@ def search_file(file_path, pattern, search_contents, colorize):
                     try:
                         line = line.decode('utf-8')
                     except UnicodeDecodeError:
+                        print(f"Warning: Skipping file {file_path} due to UnicodeDecodeError")
                         continue
                     if pattern.search(line):
                         results.append(format_output(file_path, i, line.strip(), colorize))
@@ -54,7 +68,7 @@ def worker(file_queue, pattern, result_queue, search_contents, colorize):
 
 def super_grep(directory, pattern, num_workers, search_contents, colorize, depth):
     transformed_pattern = transform_pattern(pattern)
-    regex = re.compile(transformed_pattern, re.IGNORECASE)
+    regex = re.compile(transformed_pattern)
 
     file_queue = multiprocessing.Queue()
     result_queue = multiprocessing.Queue()
@@ -133,6 +147,34 @@ Examples:
     args = parser.parse_args()
 
     super_grep(args.directory, args.pattern, args.workers, args.contents, args.color, args.depth)
+
+def testSuperGrep():
+    # Test cases
+    test_filenames = [
+        "create_periodic_table_data",
+        "periodic-Table",
+        "periodic Table",
+        "periodictable",
+        "periodic-table"
+    ]
+    matches = []
+    
+    # Pattern to test
+    input_patterns = ["periodic-table", "periodic Table", "Periodic Table", "Periodic-Table", "periodiC_table"]
+    input_pattern = input_patterns[3]  # 3 and 4 don't match anything
+    compiled_pattern = re.compile(transform_pattern(input_pattern))
+
+    # Testing
+    for filename in test_filenames:
+        match = compiled_pattern.search(filename)
+        if match:
+            print(f"Testing '\033[32m{filename}\033[0m': Matched")
+            matches.append(filename)
+        else:
+            print(f"Testing '\033[31m{filename}\033[0m': No match")
+
+    print(transform_pattern(input_pattern))
+    print("Matches: ", len(matches))
 
 if __name__ == "__main__":
     main()
