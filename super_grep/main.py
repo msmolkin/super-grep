@@ -28,8 +28,8 @@ def transform_pattern(pattern):
     # Add case insensitivity flag
     return r'(?i)' + transformed_pattern
 
-def format_output(file_path, line_num, line_content, colorize, show_only_filename):
-    if show_only_filename:
+def format_output(file_path, line_num, line_content, colorize, hide_path):
+    if hide_path:
         file_path = os.path.basename(file_path)
     if colorize:
         # Changing so the matched part of response is green with a bold font will slow down the search even further
@@ -37,13 +37,18 @@ def format_output(file_path, line_num, line_content, colorize, show_only_filenam
     else:
         return f"{file_path}" + (f":{line_num}:{line_content}" if line_num else "")
 
-def search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, show_only_filename):
+def search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches):
+    if files_with_matches:
+        stop_on_first_match = True
+
     results = []
     try:
         if not search_contents:
             if pattern.search(os.path.basename(file_path)):
-                results.append(format_output(file_path, 0, "", colorize, show_only_filename))
-            return results
+                if files_with_matches:
+                    return [os.path.basename(file_path) if hide_path else file_path]
+                results.append(format_output(file_path, 0, "", colorize, hide_path))
+                return results
 
         with open(file_path, 'rb') as f:
             with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
@@ -53,24 +58,26 @@ def search_file(file_path, pattern, search_contents, colorize, stop_on_first_mat
                     except UnicodeDecodeError:
                         continue
                     if pattern.search(line):
-                        results.append(format_output(file_path, i, line.strip(), colorize, show_only_filename))
+                        if files_with_matches:
+                            return [os.path.basename(file_path) if hide_path else file_path]
+                        results.append(format_output(file_path, i, line.strip(), colorize, hide_path))
                         if stop_on_first_match:
                             return results
     except (IOError, ValueError):
         pass
     return results
 
-def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on_first_match, show_only_filename):
+def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on_first_match, hide_path):
     while True:
         try:
             file_path = file_queue.get_nowait()
         except:
             break
-        results = search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, show_only_filename)
+        results = search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, hide_path)
         if results:
             result_queue.put(results)
 
-def super_grep(directory, pattern, num_workers, search_contents, colorize, depth, stop_on_first_match, show_only_filename):
+def super_grep(directory, pattern, num_workers, search_contents, colorize, depth, stop_on_first_match, hide_path, files_with_matches):
     transformed_pattern = transform_pattern(pattern)
     regex = re.compile(transformed_pattern)
 
@@ -89,7 +96,7 @@ def super_grep(directory, pattern, num_workers, search_contents, colorize, depth
 
     processes = []
     for _ in range(num_workers):
-        p = multiprocessing.Process(target=worker, args=(file_queue, regex, result_queue, search_contents, colorize, stop_on_first_match, show_only_filename))
+        p = multiprocessing.Process(target=worker, args=(file_queue, regex, result_queue, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches))
         p.start()
         processes.append(p)
 
@@ -129,30 +136,38 @@ Examples:
     super-grep /path/to/search "FooBar|first_name"
 
   Search up to 2 levels deep:
-    super-grep /path/to/search "FooBar|first_name" --depth 2
+    super-grep /path/to/search "FooBar|first_name" -d 2
 
   Search all subdirectories:
-    super-grep /path/to/search "FooBar|first_name" --depth -1
+    super-grep /path/to/search "FooBar|first_name" -d -1
 
   Search file contents up to 3 levels deep with colored output:
-    super-grep /path/to/search "FooBar|first_name" --depth 3 --contents --color
+    super-grep /path/to/search "FooBar|first_name" -d 3 -c -C
 
   Use 8 worker processes:
     super-grep /path/to/search "FooBar|first_name" --workers 8
+    super-grep /path/to/search "FooBar|first_name" -w 8
+
+  Hide the directory path in the output:
+    super-grep /path/to/search "getValueFromSection" -H
+
+  Show only filenames and stop on the first match:
+    super-grep /path/to/search "getValueFromSection" -H -s
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("directory", help="Directory to search in")
     parser.add_argument("pattern", help="Search pattern")
-    parser.add_argument("--workers", type=int, default=multiprocessing.cpu_count(), help="Number of worker processes (default: CPU count)")
-    parser.add_argument("--contents", action="store_true", help="Search within file contents (default: search filenames only)")
-    parser.add_argument("--color", action="store_true", help="Colorize the output")
-    parser.add_argument("--depth", type=int, default=0, help="Depth of directory search (default: 0, search only in given directory; use -1 for unlimited depth)")
-    parser.add_argument("--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
-    parser.add_argument("--filename-only", action="store_true", help="Display only the filename without the directory path")
+    parser.add_argument("-w", "--workers", type=int, default=multiprocessing.cpu_count(), help="Number of worker processes (default: CPU count)")
+    parser.add_argument("-c", "--contents", action="store_true", help="Search within file contents (default: search filenames only)")
+    parser.add_argument("-C", "--color", action="store_true", help="Colorize the output")
+    parser.add_argument("-d", "--depth", type=int, default=0, help="Depth of directory search (default: 0, search only in given directory; use -1 for unlimited depth)")
+    parser.add_argument("-s", "--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
+    parser.add_argument("-H", "--hide-path", action="store_true", help="Hide the directory path, showing only the filename")
+    parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output.")
     args = parser.parse_args()
 
-    super_grep(args.directory, args.pattern, args.workers, args.contents, args.color, args.depth, args.stop_on_first_match, args.filename_only)
+    super_grep(args.directory, args.pattern, args.workers, args.contents, args.color, args.depth, args.stop_on_first_match, args.hide_path, args.files_with_matches)
 
 def testSuperGrep():
     # Test cases
