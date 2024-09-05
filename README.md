@@ -12,8 +12,13 @@ Super Grep is a powerful, format-agnostic search tool that allows you to search 
 - Format-agnostic pattern matching (supports camelCase, snake_case, PascalCase, kebab-case, Title Case, Capitalized With Spaces, etc.)
 - Configurable search depth
 - File content searching
-- Colorized output
-- Multi-processing for improved performance
+- Colorized output option
+- Multi-process search for improved performance
+- Depth-controlled directory search
+- File name only search option
+- Stop on first match option
+- Option to hide directory paths in output
+- Option to show only file names with matches
 
 ## Installation
 
@@ -24,7 +29,6 @@ pip install super-grep
 ```
 
 ## Usage
-
 After installation, you can use the `super-grep` command directly from your terminal:
 
 ```
@@ -63,6 +67,16 @@ super-grep [OPTIONS] DIRECTORY PATTERN
 5. Use 8 worker processes:
    ```
    super-grep /path/to/search "FooBar|first_name" --workers 8
+   ```
+
+6. Hide the directory path in the output:
+   ```
+   super-grep /path/to/search "getValueFromSection" -H
+   ```
+
+7. Show only filenames and stop on the first match:
+   ```
+   super-grep /path/to/search "getValueFromSection" -H -s
    ```
 
 ## Contributing

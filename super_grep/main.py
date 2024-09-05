@@ -37,19 +37,16 @@ def format_output(file_path, line_num, line_content, colorize, hide_path):
     else:
         return f"{file_path}" + (f":{line_num}:{line_content}" if line_num else "")
 
-def search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches):
-    if files_with_matches:
-        stop_on_first_match = True
+def search_file(file_path, pattern, filenames_only, colorize, stop_on_first_match, hide_path, files_with_matches):
+    if filenames_only:
+        if pattern.search(os.path.basename(file_path)):
+            if files_with_matches:
+                return [os.path.basename(file_path) if hide_path else file_path]
+            return [format_output(file_path, 0, "", colorize, hide_path)]
+        return []
 
     results = []
     try:
-        if not search_contents:
-            if pattern.search(os.path.basename(file_path)):
-                if files_with_matches:
-                    return [os.path.basename(file_path) if hide_path else file_path]
-                results.append(format_output(file_path, 0, "", colorize, hide_path))
-                return results
-
         with open(file_path, 'rb') as f:
             with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
                 for i, line in enumerate(iter(mm.readline, b''), 1):
@@ -159,7 +156,7 @@ Examples:
     parser.add_argument("directory", help="Directory to search in")
     parser.add_argument("pattern", help="Search pattern")
     parser.add_argument("-w", "--workers", type=int, default=multiprocessing.cpu_count(), help="Number of worker processes (default: CPU count)")
-    parser.add_argument("-c", "--contents", action="store_true", help="Search within file contents (default: search filenames only)")
+    parser.add_argument("-f", "--filenames-only", action="store_true", help="Search only within filenames (default: search within file contents)")
     parser.add_argument("-C", "--color", action="store_true", help="Colorize the output")
     parser.add_argument("-d", "--depth", type=int, default=0, help="Depth of directory search (default: 0, search only in given directory; use -1 for unlimited depth)")
     parser.add_argument("-s", "--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
@@ -167,7 +164,7 @@ Examples:
     parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output.")
     args = parser.parse_args()
 
-    super_grep(args.directory, args.pattern, args.workers, args.contents, args.color, args.depth, args.stop_on_first_match, args.hide_path, args.files_with_matches)
+    super_grep(args.directory, args.pattern, args.workers, args.filenames_only, args.color, args.depth, args.stop_on_first_match, args.hide_path, args.files_with_matches)
 
 def testSuperGrep():
     # Test cases
