@@ -67,13 +67,13 @@ def search_file(file_path, pattern, search_contents, colorize, stop_on_first_mat
         pass
     return results
 
-def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on_first_match, hide_path):
+def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches):
     while True:
         try:
             file_path = file_queue.get_nowait()
         except:
             break
-        results = search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, hide_path)
+        results = search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches)
         if results:
             result_queue.put(results)
 
