@@ -5,6 +5,8 @@
 [![PyPI version](https://badge.fury.io/py/super-grep.svg)](https://badge.fury.io/py/super-grep)
 <!-- [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YOUR_PAYPAL_BUTTON_ID) -->
 
+###### IMPORTANT: This is alpha software. If you have any version below 0.1.4, please update to 0.1.4 or later. There have been significant changes to the logic that processes the search pattern.
+
 Super Grep is a powerful, format-agnostic search tool that allows you to search for patterns in files and directories with ease. It supports various naming conventions and provides options for controlling search depth, file content searching, and output colorization.
 
 ## Features
