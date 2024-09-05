@@ -28,12 +28,21 @@ def transform_pattern(pattern):
     # Add case insensitivity flag
     return r'(?i)' + transformed_pattern
 
-def search_file(file_path, pattern, search_contents, colorize):
+def format_output(file_path, line_num, line_content, colorize, show_only_filename):
+    if show_only_filename:
+        file_path = os.path.basename(file_path)
+    if colorize:
+        # Changing so the matched part of response is green with a bold font will slow down the search even further
+        return f"\033[35m{file_path}\033[0m" + (f":\033[32m{line_num}\033[0m:{line_content}" if line_num else "")
+    else:
+        return f"{file_path}" + (f":{line_num}:{line_content}" if line_num else "")
+
+def search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, show_only_filename):
     results = []
     try:
         if not search_contents:
             if pattern.search(os.path.basename(file_path)):
-                results.append(format_output(file_path, 0, "", colorize))
+                results.append(format_output(file_path, 0, "", colorize, show_only_filename))
             return results
 
         with open(file_path, 'rb') as f:
@@ -42,31 +51,26 @@ def search_file(file_path, pattern, search_contents, colorize):
                     try:
                         line = line.decode('utf-8')
                     except UnicodeDecodeError:
-                        print(f"Warning: Skipping file {file_path} due to UnicodeDecodeError")
                         continue
                     if pattern.search(line):
-                        results.append(format_output(file_path, i, line.strip(), colorize))
+                        results.append(format_output(file_path, i, line.strip(), colorize, show_only_filename))
+                        if stop_on_first_match:
+                            return results
     except (IOError, ValueError):
         pass
     return results
 
-def format_output(file_path, line_num, line_content, colorize):
-    if colorize:
-        return f"\033[35m{file_path}\033[0m" + (f":\033[32m{line_num}\033[0m:{line_content}" if line_num else "")
-    else:
-        return f"{file_path}" + (f":{line_num}:{line_content}" if line_num else "")
-
-def worker(file_queue, pattern, result_queue, search_contents, colorize):
+def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on_first_match, show_only_filename):
     while True:
         try:
             file_path = file_queue.get_nowait()
         except:
             break
-        results = search_file(file_path, pattern, search_contents, colorize)
+        results = search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, show_only_filename)
         if results:
             result_queue.put(results)
 
-def super_grep(directory, pattern, num_workers, search_contents, colorize, depth):
+def super_grep(directory, pattern, num_workers, search_contents, colorize, depth, stop_on_first_match, show_only_filename):
     transformed_pattern = transform_pattern(pattern)
     regex = re.compile(transformed_pattern)
 
@@ -85,7 +89,7 @@ def super_grep(directory, pattern, num_workers, search_contents, colorize, depth
 
     processes = []
     for _ in range(num_workers):
-        p = multiprocessing.Process(target=worker, args=(file_queue, regex, result_queue, search_contents, colorize))
+        p = multiprocessing.Process(target=worker, args=(file_queue, regex, result_queue, search_contents, colorize, stop_on_first_match, show_only_filename))
         p.start()
         processes.append(p)
 
@@ -144,9 +148,11 @@ Examples:
     parser.add_argument("--contents", action="store_true", help="Search within file contents (default: search filenames only)")
     parser.add_argument("--color", action="store_true", help="Colorize the output")
     parser.add_argument("--depth", type=int, default=0, help="Depth of directory search (default: 0, search only in given directory; use -1 for unlimited depth)")
+    parser.add_argument("--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
+    parser.add_argument("--filename-only", action="store_true", help="Display only the filename without the directory path")
     args = parser.parse_args()
 
-    super_grep(args.directory, args.pattern, args.workers, args.contents, args.color, args.depth)
+    super_grep(args.directory, args.pattern, args.workers, args.contents, args.color, args.depth, args.stop_on_first_match, args.filename_only)
 
 def testSuperGrep():
     # Test cases
