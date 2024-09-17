@@ -8,7 +8,7 @@ with open("SUPPORT.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="super-grep",
-    version="0.1.4",
+    version="0.1.5",
     author="Michael Smolkin",
     author_email="michael@smolkin.org",
     description="A powerful, format-agnostic search tool",
