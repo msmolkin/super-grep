@@ -37,8 +37,8 @@ def format_output(file_path, line_num, line_content, colorize, hide_path):
     else:
         return f"{file_path}" + (f":{line_num}:{line_content}" if line_num else "")
 
-def search_file(file_path, pattern, filenames_only, colorize, stop_on_first_match, hide_path, files_with_matches):
-    if filenames_only:
+def search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches):
+    if search_contents:
         if pattern.search(os.path.basename(file_path)):
             if files_with_matches:
                 return [os.path.basename(file_path) if hide_path else file_path]
@@ -128,6 +128,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Super Grep: Python implementation with depth control and format-agnostic search",
         epilog="""
+Recommendation: Always include the -C flag for prettier output unless you have a reason not to.
+
 Examples:
   Search only in the given directory:
     super-grep /path/to/search "FooBar|first_name"
@@ -139,7 +141,7 @@ Examples:
     super-grep /path/to/search "FooBar|first_name" -d -1
 
   Search file contents up to 3 levels deep with colored output:
-    super-grep /path/to/search "FooBar|first_name" -d 3 -c -C
+    super-grep /path/to/search "FooBar|first_name" -d 3 -C
 
   Use 8 worker processes:
     super-grep /path/to/search "FooBar|first_name" --workers 8
@@ -161,10 +163,25 @@ Examples:
     parser.add_argument("-d", "--depth", type=int, default=0, help="Depth of directory search (default: 0, search only in given directory; use -1 for unlimited depth)")
     parser.add_argument("-s", "--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
     parser.add_argument("-H", "--hide-path", action="store_true", help="Hide the directory path, showing only the filename")
-    parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output.")
-    args = parser.parse_args()
+    parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output (the matched lines are not shown).")
 
-    super_grep(args.directory, args.pattern, args.workers, args.filenames_only, args.color, args.depth, args.stop_on_first_match, args.hide_path, args.files_with_matches)
+    try:
+        args = parser.parse_args()
+    except SystemExit as e:
+        print("Error: An unexpected flag was used or a required argument is missing.")
+        print("Please check the command and refer to the help message for valid options.")
+        print("Use 'super-grep --help' for more information.")
+        sys.exit(1)
+
+    super_grep(args.directory,
+               args.pattern,
+               args.workers,
+               not args.filenames_only,
+               args.color,
+               args.depth,
+               args.stop_on_first_match,
+               args.hide_path,
+               args.files_with_matches)
 
 def testSuperGrep():
     # Test cases
@@ -195,4 +212,5 @@ def testSuperGrep():
     print("Matches: ", len(matches))
 
 if __name__ == "__main__":
+    # testSuperGrep()
     main()
