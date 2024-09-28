@@ -6,6 +6,21 @@ import argparse
 import multiprocessing
 import mmap
 import sys
+import time
+
+DEBUG = False
+
+def debug_print(message, delay=1.5):
+    if DEBUG:
+        print(message)
+        # time.sleep(delay)
+        
+def debug_show_queue(queue):
+    if DEBUG:
+        while not queue.empty():
+            item = queue.get()
+            print(f"Item in queue: {item}")
+            queue.put(item)  # Reinsert the item back into the queue
 
 def transform_pattern(pattern):
     # Normalize the pattern by replacing all separator characters with a common placeholder, e.g., a space
@@ -26,7 +41,7 @@ def transform_pattern(pattern):
     transformed_pattern = r'[-_\s]*'.join(transformed_words)
     
     # Add case insensitivity flag
-    return r'(?i)' + transformed_pattern
+    return r'(?i)' + transformed_pattern  # TODO: this might be unnecessary, because re.IGNORECASE is used in the compiled pattern
 
 def format_output(file_path, line_num, line_content, colorize, hide_path):
     if hide_path:
@@ -38,12 +53,12 @@ def format_output(file_path, line_num, line_content, colorize, hide_path):
         return f"{file_path}" + (f":{line_num}:{line_content}" if line_num else "")
 
 def search_file(file_path, pattern, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches):
-    if search_contents:
-        if pattern.search(os.path.basename(file_path)):
-            if files_with_matches:
+    if not search_contents:  # Check if we are only searching within filenames
+        if pattern.search(os.path.basename(file_path)):  # Search the filename
+            if files_with_matches:  # If only filenames with matches should be returned
                 return [os.path.basename(file_path) if hide_path else file_path]
-            return [format_output(file_path, 0, "", colorize, hide_path)]
-        return []
+            return [format_output(file_path, 0, "", colorize, hide_path)]  # Return formatted output
+        return []  # No match found, return an empty list
 
     results = []
     try:
@@ -76,24 +91,36 @@ def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on
 
 def super_grep(directory, pattern, num_workers, search_contents, colorize, depth, stop_on_first_match, hide_path, files_with_matches):
     transformed_pattern = transform_pattern(pattern)
+    debug_print(f"Transformed pattern: {transformed_pattern}")
     regex = re.compile(transformed_pattern)
+    debug_print(f"Compiled regex: {regex}")
 
     file_queue = multiprocessing.Queue()
+    debug_print("Initialized file queue.")
     result_queue = multiprocessing.Queue()
+    debug_print("Initialized result queue.")
 
-    for root, _, files in os.walk(directory):
+    for root, dirs, files in os.walk(directory):
         rel_path = os.path.relpath(root, directory)
+        debug_print(f"Relative path: {rel_path}")
         current_depth = 0 if rel_path == '.' else len(rel_path.split(os.sep))
+        debug_print(f"Current depth: {current_depth}")
         if depth is not None and current_depth > depth:
+            debug_print(f"Skipping directory {root} due to depth limit."); #dirs[:] = []  # Clear dirs to prevent os.walk from descending further. This might be an optimization, or it might end up deleting other dirs that we wanted to descend in a parallel directory.
             continue
 
         for file in files:
             file_path = os.path.join(root, file)
+            debug_print(f"Adding file to queue: {file_path}")
             file_queue.put(file_path)
 
     processes = []
+    
+    debug_show_queue(file_queue)
+    debug_print(f"Starting {num_workers} worker processes.")
     for _ in range(num_workers):
         p = multiprocessing.Process(target=worker, args=(file_queue, regex, result_queue, search_contents, colorize, stop_on_first_match, hide_path, files_with_matches))
+        debug_print(f"Starting process: {p}")
         p.start()
         processes.append(p)
 
@@ -102,21 +129,27 @@ def super_grep(directory, pattern, num_workers, search_contents, colorize, depth
         while any(p.is_alive() for p in processes) or not result_queue.empty():
             try:
                 results = result_queue.get_nowait()
+                debug_print(f"Retrieved results from queue: {results}")
                 for result in results:
                     print(result, flush=True)
                     printed += 1
             except:
+                debug_print("No results available in the queue.")
                 pass
     except KeyboardInterrupt:
         print("\nInterrupted by user. Stopping gracefully...", file=sys.stderr)
         for p in processes:
             p.terminate()
+            debug_print(f"Terminated process: {p}")
 
     for p in processes:
         p.join()
+        debug_print(f"Joined process: {p}")
 
     while not result_queue.empty():
         results = result_queue.get()
+        print(f"Retrieved results from queue: {results}")  # Print what was done
+        time.sleep(1.5)  # Delay after print
         for result in results:
             print(result, flush=True)
             printed += 1
@@ -155,6 +188,8 @@ Examples:
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
+    debug_print("Initialized argument parser with description and epilog.")
+
     parser.add_argument("directory", help="Directory to search in")
     parser.add_argument("pattern", help="Search pattern")
     parser.add_argument("-w", "--workers", type=int, default=multiprocessing.cpu_count(), help="Number of worker processes (default: CPU count)")
@@ -164,9 +199,12 @@ Examples:
     parser.add_argument("-s", "--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
     parser.add_argument("-H", "--hide-path", action="store_true", help="Hide the directory path, showing only the filename")
     parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output (the matched lines are not shown).")
+    
+    debug_print("Added command line arguments to the parser.")
 
     try:
         args = parser.parse_args()
+        debug_print("Parsed command line arguments.")
     except SystemExit as e:
         print("Error: An unexpected flag was used or a required argument is missing.")
         print("Please check the command and refer to the help message for valid options.")
@@ -182,6 +220,7 @@ Examples:
                args.stop_on_first_match,
                args.hide_path,
                args.files_with_matches)
+    debug_print("Called super_grep with parsed arguments.")
 
 def testSuperGrep():
     # Test cases
