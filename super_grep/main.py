@@ -10,7 +10,7 @@ import time
 
 DEBUG = False
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 def debug_print(message, delay=1.5):
     if DEBUG:
@@ -92,7 +92,7 @@ def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on
         if results:
             result_queue.put(results)
 
-def super_grep(directory, pattern, num_workers, search_contents, colorize, depth, stop_on_first_match, hide_path, files_with_matches):
+def super_grep(directory, pattern, num_workers, search_contents, colorize, depth, stop_on_first_match, hide_path, files_with_matches, file_filter):
     transformed_pattern = transform_pattern(pattern)
     debug_print(f"Transformed pattern: {transformed_pattern}")
     regex = re.compile(transformed_pattern)
@@ -113,6 +113,8 @@ def super_grep(directory, pattern, num_workers, search_contents, colorize, depth
             continue
 
         for file in files:
+            if file_filter and not any(file.endswith(ext) for ext in file_filter.split(',')):
+                continue  # Skip files that do not match the filter
             file_path = os.path.join(root, file)
             debug_print(f"Adding file to queue: {file_path}")
             file_queue.put(file_path)
@@ -188,6 +190,10 @@ Examples:
 
   Show only filenames and stop on the first match:
     super-grep /path/to/search "getValueFromSection" -H -s
+    
+  Search for a pattern in file names:
+    super-grep /path/to/search "ApiCreate" -H -s -l -t ".c,.h,.txt.old,.md"
+    super-grep /path/to/search "My name is" -H -s -C -t ".txt.old,.md" -d 2
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -202,6 +208,7 @@ Examples:
     parser.add_argument("-s", "--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
     parser.add_argument("-H", "--hide-path", action="store_true", help="Hide the directory path, showing only the filename")
     parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output (the matched lines are not shown).")
+    parser.add_argument("-t", "--file-type", help="Filter files by type, e.g., '.c,.h' to search only C headers and source files")
     parser.add_argument("-v", "--version", action="version", version=f"super-grep {__version__}", help="Show version and exit")
     parser.add_argument("-V", "--verbose", action="store_true", help="Show verbose output")
 
@@ -230,7 +237,8 @@ Examples:
                None if args.depth == -1 else args.depth,
                args.stop_on_first_match,
                args.hide_path,
-               args.files_with_matches)
+               args.files_with_matches,
+               args.file_type)  # Pass the file type filter to super_grep
     debug_print("Called super_grep with parsed arguments.")
 
 def testSuperGrep():
