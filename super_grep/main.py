@@ -10,6 +10,8 @@ import time
 
 DEBUG = False
 
+__version__ = "0.1.8"
+
 def debug_print(message, delay=1.5):
     if DEBUG:
         print(message)
@@ -200,7 +202,7 @@ Examples:
     parser.add_argument("-s", "--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
     parser.add_argument("-H", "--hide-path", action="store_true", help="Hide the directory path, showing only the filename")
     parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output (the matched lines are not shown).")
-    parser.add_argument("-v", "--version", action="version", version="super-grep 0.1.6", help="Show version and exit")
+    parser.add_argument("-v", "--version", action="version", version=f"super-grep {__version__}", help="Show version and exit")
     parser.add_argument("-V", "--verbose", action="store_true", help="Show verbose output")
 
     try:
@@ -214,10 +216,11 @@ Examples:
 
         debug_print("Added command line arguments to the parser.")
     except SystemExit as e:
-        print("Error: An unexpected flag was used or a required argument is missing.")
-        print("Please check the command and refer to the help message for valid options.")
-        print("Use 'super-grep --help' for more information.")
-        sys.exit(1)
+        if e.code != 0:
+            print("Error: An unexpected flag was used or a required argument is missing.")
+            print("Please check the command and refer to the help message for valid options.")
+            print("Use 'super-grep --help' for more information.")
+        sys.exit(e.code)
 
     super_grep(args.directory,
                args.pattern,
