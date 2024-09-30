@@ -17,6 +17,7 @@ def debug_print(message, delay=1.5):
         
 def debug_show_queue(queue):
     if DEBUG:
+        print("Showing all items to search through:")
         while not queue.empty():
             item = queue.get()
             print(f"Item in queue: {item}")
@@ -199,12 +200,19 @@ Examples:
     parser.add_argument("-s", "--stop-on-first-match", action="store_true", help="Stop searching a file after the first match is found")
     parser.add_argument("-H", "--hide-path", action="store_true", help="Hide the directory path, showing only the filename")
     parser.add_argument("-l", "--files-with-matches", action="store_true", help="Only the names of files containing matches are written to standard output (the matched lines are not shown).")
-    
-    debug_print("Added command line arguments to the parser.")
+    parser.add_argument("-v", "--version", action="version", version="super-grep 0.1.6", help="Show version and exit")
+    parser.add_argument("-V", "--verbose", action="store_true", help="Show verbose output")
 
     try:
         args = parser.parse_args()
         debug_print("Parsed command line arguments.")
+        
+        if args.verbose:
+            global DEBUG
+            DEBUG = True
+            print("Verbose output enabled.")
+
+        debug_print("Added command line arguments to the parser.")
     except SystemExit as e:
         print("Error: An unexpected flag was used or a required argument is missing.")
         print("Please check the command and refer to the help message for valid options.")
@@ -216,7 +224,7 @@ Examples:
                args.workers,
                not args.filenames_only,
                args.color,
-               args.depth,
+               None if args.depth == -1 else args.depth,
                args.stop_on_first_match,
                args.hide_path,
                args.files_with_matches)
