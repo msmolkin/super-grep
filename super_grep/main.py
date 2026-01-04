@@ -43,8 +43,7 @@ def transform_pattern(pattern):
     # Join words with a regex that matches any sequence of separator characters
     transformed_pattern = r'[-_\s]*'.join(transformed_words)
     
-    # Add case insensitivity flag
-    return r'(?i)' + transformed_pattern  # TODO: this might be unnecessary, because re.IGNORECASE is used in the compiled pattern
+    return transformed_pattern
 
 def format_output(file_path, line_num, line_content, colorize, hide_path):
     if hide_path:
@@ -95,7 +94,7 @@ def worker(file_queue, pattern, result_queue, search_contents, colorize, stop_on
 def super_grep(directory, pattern, num_workers, search_contents, colorize, depth, stop_on_first_match, hide_path, files_with_matches, file_filter):
     transformed_pattern = transform_pattern(pattern)
     debug_print(f"Transformed pattern: {transformed_pattern}")
-    regex = re.compile(transformed_pattern)
+    regex = re.compile(transformed_pattern, re.IGNORECASE)
     debug_print(f"Compiled regex: {regex}")
 
     file_queue = multiprocessing.Queue()
@@ -255,7 +254,7 @@ def testSuperGrep():
     # Pattern to test
     input_patterns = ["periodic-table", "periodic Table", "Periodic Table", "Periodic-Table", "periodiC_table"]
     input_pattern = input_patterns[3]  # 3 and 4 don't match anything
-    compiled_pattern = re.compile(transform_pattern(input_pattern))
+    compiled_pattern = re.compile(transform_pattern(input_pattern), re.IGNORECASE)
 
     # Testing
     for filename in test_filenames:
